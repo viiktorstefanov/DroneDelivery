@@ -1,0 +1,114 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    background-color: #ffffff;
+    width: 100dvw;
+    height: 100dvh;
+    padding: 2rem 8rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.message {
+    font-family: 'Helvetica', sans-serif;
+    font-size: 1.3rem;
+}
+
+.result-message{
+    font-family: 'Helvetica', sans-serif;
+    font-size: 1.3rem;
+    margin-top: 1rem;
+}
+
+.input-card, .output-card {
+    flex-grow: 1;
+}
+
+.input-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5rem;
+}
+
+.input-card form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    border: 3px solid #F58220;
+    border-radius: 8px;
+    padding: 5rem;
+}
+
+.input-file{
+    padding: 0rem 1.5rem;
+    padding-top: 1rem;
+    height: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F58220;
+    border-radius: 8px;
+    border: 3px solid #F58220;
+    cursor: pointer;
+    color: #ffffff;
+    width: 350px;
+    font-family: 'Helvetica', sans-serif;
+    font-size: 1.3rem;
+}
+
+.input-file:hover{
+    background-color: #fdfdfd;
+    color: #F58220;
+}
+
+.submit-btn {
+    padding: 0.5rem 2rem;
+    background-color: #F58220;
+    border: 3px solid #F58220;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Helvetica', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    width: 350px;
+}
+
+.submit-btn:hover {
+    background-color: #fff;
+    color: #F58220;
+}
+
+.output-card{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    width: 500px;
+    height: 500px;
+    border: 3px solid #F58220;
+    border-radius: 8px;
+}
+
+.result {
+    height: 2rem;
+    width: 5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #F58220;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-family: 'Helvetica', sans-serif;
+    text-align: center;
+}
