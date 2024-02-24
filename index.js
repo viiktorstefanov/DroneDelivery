@@ -1,30 +1,46 @@
 import { engine } from "./app/engine.js";
-import { generateTemplate } from "./app/services/generateTemplate.js";
+import { clearPreviousResult } from "./app/services/clearPreviousResult.js";
+import { generateErrorTemplate } from "./app/services/generateErrorTemplate.js";
 
 const form = document.getElementById('form');
 const fileInput = document.getElementById('fileInput');
 
-const input = localStorage.getItem('input');
-
-if(input) {
-    const result = engine(JSON.parse(input));
-    generateTemplate(result);
-};
-
 form.addEventListener('submit', (e) => {
+
     e.preventDefault();
+
+    if(!fileInput.files[0]) {
+        generateErrorTemplate('upload your file before submit!');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const splitInput = file.name.split('.');
+    const fileTypeName = splitInput[splitInput.length - 1];
+
+    if(file.type !== 'application/json') {
+        generateErrorTemplate('Only JSON files are allowed');
+        return;
+    }
+    if(fileTypeName !== 'json') {
+        generateErrorTemplate('Only JSON files are allowed');
+        return;
+    }
 
     const reader = new FileReader();
 
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
         const jsonData = event.target.result;
-        const parsedData = JSON.parse(jsonData);
-        localStorage.setItem('input', JSON.stringify(parsedData));
-        const result = engine(parsedData);
-
-        const spans = document.getElementById('result').querySelectorAll(span);
-        spans.forEach(span => span.remove());
-        generateTemplate(result);
+        const oldInput = localStorage.getItem('input');
+        if(oldInput) {
+            localStorage.setItem('newOrders', jsonData);
+            clearPreviousResult();
+            engine();
+            return;
+        }
+        localStorage.setItem('input', jsonData); 
+        clearPreviousResult();
+        engine();
     };
 
     reader.readAsText(fileInput.files[0]);

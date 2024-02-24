@@ -5,5 +5,6 @@ export class Warehouse {
             y
         };
         this.name = name;
+        this.drones = [];
     };
 };
