@@ -1,3 +1,4 @@
+import { findNearestStation } from "../services/findNearestStation.js";
 import { showOrderProducts } from "../services/showProducts.js";
 
 export class Drone {
@@ -14,6 +15,10 @@ export class Drone {
         this.isDelivering = false;
         this.status = '';
         this.isAtWarehouse = true;
+        this.coordinates = {
+            x: 0,
+            y: 0,
+        };
     };
 
     deliver(reqBattery, order, customer, distanceToCustomer) {
@@ -41,16 +46,23 @@ export class Drone {
 
     };
 
-    async chargeBattery() {
+    goToCharge(stations) {
+        const station = findNearestStation(this.coordinates.x, this.coordinates.y, stations);
 
         this.isCharging = true;
         console.log(`Drone with id: ${this.id} is charging`);
         //should be fast with fast charge
-        await new Promise(resolve => setTimeout(resolve, 20 * 60 * 1000));
             this.currentBatteryCapacity = this.capacity;
             this.isCharging = false;
             this.batteryPercentage = 100;
             console.log(`Drone with id: ${this.id} is charged`);
         //full charge takes 20 minutes
+    };
+
+    updateCoordinates(x, y) {
+        this.coordinates = {
+            x,
+            y
+        };
     };
 };

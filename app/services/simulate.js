@@ -3,7 +3,7 @@ import { calculateDistance } from "./calculateDistance.js";
 import { findNearestWarehouse } from "./findNearestWarehouse.js";
 import { parseAndConvertCapacity } from "./parseAndConvertCapacity.js";
 
-export function simulate(warehouses, customers, orders, inputTypesOfDrones, programMinutes, realMilliseconds) {
+export function simulate(warehouses, customers, orders, inputTypesOfDrones, programMinutes, realMilliseconds, orderStatus, frequency, chargingStations) {
   // 1000 milliseconds in one second.
   //60 seconds in one minute
   const simulationTime = programMinutes * (realMilliseconds / (60 * 1000));
@@ -81,9 +81,17 @@ export function simulate(warehouses, customers, orders, inputTypesOfDrones, prog
                 break;
             };
           };
+
+          if(orderStatus) {
+            order.changeStatusToCurrently();
+          }
           //go deliver
           drone.deliver(reqBattery, order.productList, customer.name, distanceToCustomer);
+          drone.updateCoordinates(customer.coordinates.x, customer.coordinates.y);
 
+          if(orderStatus) {
+            order.changeStatusToDelivered();
+          }
 
           if (distanceToCustomer > biggestDistance) {
             biggestDistance = distanceToCustomer;

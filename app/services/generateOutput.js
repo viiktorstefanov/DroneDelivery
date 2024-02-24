@@ -1,6 +1,6 @@
 export function generateOutput(dronesTypesUsed, totalDistance, ordersLength) {
     const speed = 1;
-    console.log(ordersLength);
+
     const totalTimeOrders = totalDistance / speed;
 
     const totalTime = totalTimeOrders + 5;

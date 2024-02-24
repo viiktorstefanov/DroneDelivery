@@ -9,6 +9,7 @@ import { generateErrorTemplate } from "./services/generateErrorTemplate.js";
 import { showAnimatedDrone } from "./services/animatedDrone.js";
 import { clearPreviousResult } from "./services/clearPreviousResult.js";
 import { generateNotification } from "./services/generateNotification.js";
+import { createChargingStations } from "./chargingStation/createChargingStations.js";
 
 export async function engine() {
   showAnimatedDrone();
@@ -21,11 +22,15 @@ export async function engine() {
     input = JSON.parse(newOrders);
   }
 
+  let warehouses = {};
   let outputEnabled = false;
   let programMinutes = 0;
   let realMilliseconds = 0;
   let biggestDistance = 0;
   let dronesTypesUsed = {};
+  let orderStatus = false;
+  let frequency = 0; 
+  let chargingStations = {};
 
   if(input.output) {
     outputEnabled = input.output.poweredOn;
@@ -33,13 +38,26 @@ export async function engine() {
     realMilliseconds = input.output.minutes.real;
   };
 
+  if(input.deliveryStatus && input.deliveryStatus.output) {
+    orderStatus = true;
+    frequency = input.deliveryStatus.frequency;
+  };
+
   try {
     
     generateNotification();
 
     const mapCoverage = createMapCoverage(input["map-top-right-coordinate"]);
- 
-    const warehouses = createWarehouses(input.warehouses);
+
+    if(input.chargingStations) {
+      chargingStations = createChargingStations(input.chargingStations, mapCoverage);
+    };
+
+    if(input.products) {
+      warehouses = createWarehouses(input.warehouses, input.products);
+    } else {
+      warehouses = createWarehouses(input.warehouses);
+    };
 
     const orders = createOrders(input.orders);
 
@@ -62,7 +80,7 @@ export async function engine() {
     // };
     
     if(outputEnabled) {
-      const result = simulate(warehouses, customers, orders, input.typesOfDrones, programMinutes, realMilliseconds);
+      const result = simulate(warehouses, customers, orders, input.typesOfDrones, programMinutes, realMilliseconds, orderStatus, frequency, chargingStations);
       biggestDistance = result.biggestDistance;
       dronesTypesUsed = result.dronesTypesUsed;
     } else {
@@ -72,7 +90,7 @@ export async function engine() {
     }
  
     const output = generateOutput(dronesTypesUsed, biggestDistance, orders.length)
-    
+    console.log(chargingStations)
     generateTemplate(output);
 
   } catch (e) {
