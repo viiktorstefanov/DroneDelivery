@@ -6,6 +6,7 @@ import { parseAndConvertCapacity } from "./parseAndConvertCapacity.js";
 export function simulate(warehouses, customers, orders, inputTypesOfDrones, programMinutes, realMilliseconds, orderStatus, frequency, chargingStations) {
   // 1000 milliseconds in one second.
   //60 seconds in one minute
+  
   const simulationTime = programMinutes * (realMilliseconds / (60 * 1000));
   
     //string -> number , kw -> w
@@ -88,6 +89,12 @@ export function simulate(warehouses, customers, orders, inputTypesOfDrones, prog
           //go deliver
           drone.deliver(reqBattery, order.productList, customer.name, distanceToCustomer);
           drone.updateCoordinates(customer.coordinates.x, customer.coordinates.y);
+
+          // for recharge must think about can go to wHouse or cStation
+          // and does have enough battery to go 
+          // if(drone.batteryPercentage <= 5) {
+          //   drone.goToCharge(chargingStations, warehouses);
+          // };
 
           if(orderStatus) {
             order.changeStatusToDelivered();

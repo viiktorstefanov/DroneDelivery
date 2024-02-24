@@ -50,7 +50,7 @@ export async function engine() {
     const mapCoverage = createMapCoverage(input["map-top-right-coordinate"]);
 
     if(input.chargingStations) {
-      chargingStations = createChargingStations(input.chargingStations, mapCoverage);
+      chargingStations = createChargingStations(input.chargingStations);
     };
 
     if(input.products) {
@@ -90,7 +90,6 @@ export async function engine() {
     }
  
     const output = generateOutput(dronesTypesUsed, biggestDistance, orders.length)
-    console.log(chargingStations)
     generateTemplate(output);
 
   } catch (e) {

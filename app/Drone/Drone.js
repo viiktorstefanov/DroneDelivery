@@ -1,4 +1,5 @@
 import { findNearestStation } from "../services/findNearestStation.js";
+import { findNearestWarehouse } from "../services/findNearestWarehouse.js";
 import { showOrderProducts } from "../services/showProducts.js";
 
 export class Drone {
@@ -21,41 +22,45 @@ export class Drone {
         };
     };
 
-    deliver(reqBattery, order, customer, distanceToCustomer) {
-
+     deliver(reqBattery, orderProductList, customerName, distanceToCustomer) {
         const timeForDeliver = distanceToCustomer;
         this.isDelivering = true;
         this.currentBatteryCapacity -= reqBattery;
         this.batteryPercentage = Math.floor((this.currentBatteryCapacity/this.capacity) * 100);
         this.isAtWarehouse = false;
         this.isCounted = true;
+                   
         setTimeout(() => {
             this.isDelivering = false;
-            this.ordersCount++;
-            
-            
+            this.ordersCount++;  
             //console products 
-            showOrderProducts(order, customer);
-            console.log('drone deliver');
+            showOrderProducts(orderProductList, customerName);
     
-            //must find how to charge
-            // if (this.batteryPercentage <= 5) {
-            //     this.chargeBattery();
-            // }
-        }, 4000)
+        }, timeForDeliver)
 
     };
 
-    goToCharge(stations) {
+    goToCharge(stations, warehouses) {
         const station = findNearestStation(this.coordinates.x, this.coordinates.y, stations);
-
+        const warehouse = findNearestWarehouse({x: this.coordinates.x, y: this.coordinates.y}, warehouses);
+        //find the closest calculate distance 
+        
         this.isCharging = true;
         console.log(`Drone with id: ${this.id} is charging`);
         //should be fast with fast charge
+
+        const chargingTime = (this.capacity - this.currentBatteryCapacity) * 20;
+        setTimeout(() => {
             this.currentBatteryCapacity = this.capacity;
             this.isCharging = false;
             this.batteryPercentage = 100;
             console.log(`Drone with id: ${this.id} is charged`);
+        }, chargingTime);
+        //must find how to charge
+            // if (this.batteryPercentage <= 5) {
+            //     this.chargeBattery();
+            // }
+          
         //full charge takes 20 minutes
     };
 

@@ -1,7 +1,7 @@
 import { generateRandomId } from "../services/generateId.js";
 import { ChargingStation } from "./ChargingStation.js";
 
-export function createChargingStations(stationTypes, mapCoverage) {
+export function createChargingStations(stationTypes) {
 
   const randomId = generateRandomId("station");
 
