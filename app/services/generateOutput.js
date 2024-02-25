@@ -1,9 +1,10 @@
-export function generateOutput(dronesTypesUsed, totalDistance, ordersLength) {
+export function generateOutput(dronesTypesUsed, totalDistance, ordersLength, delayAtWarehouse = 5) {
+
     const speed = 1;
 
     const totalTimeOrders = totalDistance / speed;
 
-    const totalTime = totalTimeOrders + 5;
+    const totalTime = totalTimeOrders + delayAtWarehouse;
 
     const dronesCount = dronesTypesUsed.dronesCount1TypeDrone + dronesTypesUsed.dronesCount2TypeDrone + dronesTypesUsed.dronesCount3TypeDrone;
 

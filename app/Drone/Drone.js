@@ -14,7 +14,7 @@ export class Drone {
         this.id = id;
         this.type = type || '';
         this.isDelivering = false;
-        this.status = '';
+        this.status = 'at warehouse';
         this.isAtWarehouse = true;
         this.coordinates = {
             x: 0,
@@ -22,20 +22,22 @@ export class Drone {
         };
     };
 
-     deliver(reqBattery, orderProductList, customerName, distanceToCustomer) {
-        const timeForDeliver = distanceToCustomer;
+     deliver(reqBattery, orderProductList, customerName, timeForDeliver, onComplete) {
+        
         this.isDelivering = true;
         this.currentBatteryCapacity -= reqBattery;
         this.batteryPercentage = Math.floor((this.currentBatteryCapacity/this.capacity) * 100);
         this.isAtWarehouse = false;
         this.isCounted = true;
-                   
+        this.status = 'delivering';
+
         setTimeout(() => {
             this.isDelivering = false;
+            this.status = 'delivered';
             this.ordersCount++;  
             //console products 
             showOrderProducts(orderProductList, customerName);
-    
+            onComplete();
         }, timeForDeliver)
 
     };

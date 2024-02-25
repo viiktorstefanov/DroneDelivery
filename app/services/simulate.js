@@ -2,14 +2,21 @@ import { createDrone } from "../Drone/createDrone.js";
 import { calculateDistance } from "./calculateDistance.js";
 import { findNearestWarehouse } from "./findNearestWarehouse.js";
 import { parseAndConvertCapacity } from "./parseAndConvertCapacity.js";
+import {convertProgramMinutesToRealLifeMilliseconds} from './programTimeConverter.js'
 
-export function simulate(warehouses, customers, orders, inputTypesOfDrones, programMinutes, realMilliseconds, orderStatus, frequency, chargingStations) {
-  // 1000 milliseconds in one second.
-  //60 seconds in one minute
-  
-  const simulationTime = programMinutes * (realMilliseconds / (60 * 1000));
-  
-    //string -> number , kw -> w
+
+export async function simulate(
+  warehouses,
+  customers,
+  orders,
+  inputTypesOfDrones,
+  realPerProgram,
+  outputEnabled,
+  orderStatus,
+  frequency,
+  chargingStations
+) {
+    
   inputTypesOfDrones.map((type) => {
     type.capacity = parseAndConvertCapacity(type.capacity);
     type.consumption = parseInt(type.consumption);
@@ -23,108 +30,122 @@ export function simulate(warehouses, customers, orders, inputTypesOfDrones, prog
     dronesCount3TypeDrone: 0,
   };
 
-  for (let index = 0; index < orders.length; index++) {
-    const order = orders[index];
+  return new Promise(async (resolve) => {
+    const orderPromises = [];
+    
+    for(let order of orders.filter(order => order.status !== 'already delivered')) {
+      orderPromises.push(
+        new Promise((resolveOrder) => {
+          
+          const orderCustomerId = order.customerId;
+          customer = customers.filter(
+            (customer) => customer.id === orderCustomerId
+          )[0];
+          const warehouse = findNearestWarehouse(customer, warehouses);
+          const distanceToCustomer = Math.ceil(
+            calculateDistance(
+              warehouse.coordinates.x,
+              warehouse.coordinates.y,
+              customer.coordinates.x,
+              customer.coordinates.y
+            )
+          );
 
-    const orderCustomerId = order.customerId;
-    customer = customers.filter(
-      (customer) => customer.id === orderCustomerId
-    )[0];
-    const warehouse = findNearestWarehouse(customer, warehouses);
-    const distanceToCustomer = Math.ceil(
-      calculateDistance(
-        warehouse.coordinates.x,
-        warehouse.coordinates.y,
-        customer.coordinates.x,
-        customer.coordinates.y
-      )
-    );
+          let droneForDelivery = false;
+          const findAndDeliver = () => {
+            //check available drones in warehouse
+            for (const drone of warehouse.drones) {
+              const reqBattery = distanceToCustomer * drone.consumption;
+              const currentBattery = drone.currentBatteryCapacity;
+              const batteryToDeliver = currentBattery - reqBattery;
 
-    if (warehouse.drones.length == 0) {
-      //create needed drone in nearest warehouse
-      while (warehouse.drones.length == 0) {
-        for (const droneType of inputTypesOfDrones) {
-          const reqBattery = distanceToCustomer * droneType.consumption;
-          const baterry = droneType.capacity;
-          const batteryToDeliver = baterry - reqBattery;
+              if (
+                batteryToDeliver > 0 &&
+                !drone.isDelivering &&
+                !drone.isCharging
+              ) {
+                droneForDelivery = true;
 
-          if (batteryToDeliver >= 0) {
-            warehouse.drones.push(createDrone(droneType));
-            break;
+                //caluculate drone type used
+                if (!drone.isCounted) {
+                  switch (drone.capacity) {
+                    case 500:
+                      dronesTypesUsed.dronesCount1TypeDrone++;
+                      break;
+                    case 1000:
+                      dronesTypesUsed.dronesCount2TypeDrone++;
+                      break;
+                    case 2000:
+                      dronesTypesUsed.dronesCount3TypeDrone++;
+                      break;
+                  };
+                };
+
+                const finishOrder = () => {
+                  if (orderStatus) {
+                    order.changeStatusToDelivered();
+                  }
+
+                  if (distanceToCustomer > biggestDistance) {
+                    biggestDistance = distanceToCustomer;
+                  }
+
+                  drone.updateCoordinates(
+                    customer.coordinates.x,
+                    customer.coordinates.y
+                  );
+                  resolveOrder();
+                };
+
+                let timeForDeliver = outputEnabled ? convertProgramMinutesToRealLifeMilliseconds(distanceToCustomer, realPerProgram) : 0;
+                
+                //go deliver
+                drone.deliver(
+                  reqBattery,
+                  order.productList,
+                  customer.name,
+                  timeForDeliver,
+                  finishOrder
+                );
+
+                if (orderStatus) {
+                    order.changeStatusToCurrently();
+                  };
+
+                // for recharge must think about can go to wHouse or cStation
+                // and does have enough battery to get products from wHouse and deliver and optimization
+                // if(drone.batteryPercentage <= 5) {
+                //   drone.goToCharge(chargingStations, warehouses);
+                // };
+
+                break;
+              }
+            }
           };
-        };
-      };
-    };
 
-    let droneForDelivery = false;
-
-    if (warehouse.drones.length > 0) {
-        //check available drones in warehouse
-      for (const drone of warehouse.drones) {
-        const reqBattery = distanceToCustomer * drone.consumption;
-        const currentBattery = drone.currentBatteryCapacity;
-        const batteryToDeliver = currentBattery - reqBattery;
-
-        if (batteryToDeliver > 0 && !drone.isDelivering && !drone.isCharging) {
-            droneForDelivery = true;
-
-          //caluculate drone type used
-          if (!drone.isCounted) {
-            switch (drone.capacity) {
-              case 500:
-                dronesTypesUsed.dronesCount1TypeDrone++;
-                break;
-              case 1000:
-                dronesTypesUsed.dronesCount2TypeDrone++;
-                break;
-              case 2000:
-                dronesTypesUsed.dronesCount3TypeDrone++;
-                break;
-            };
+          if (warehouse.drones.length > 0) {
+            findAndDeliver();
           };
 
-          if(orderStatus) {
-            order.changeStatusToCurrently();
+          //no available drones in warehouse
+          if (!droneForDelivery) {
+            for (const droneType of inputTypesOfDrones) {
+              const reqBattery = distanceToCustomer * droneType.consumption;
+              const baterry = droneType.capacity;
+              const batteryToDeliver = baterry - reqBattery;
+
+              if (batteryToDeliver >= 0) {
+                warehouse.drones.push(createDrone(droneType));
+                findAndDeliver();
+                break;
+              }
+            }
           }
-          //go deliver
-          drone.deliver(reqBattery, order.productList, customer.name, distanceToCustomer);
-          drone.updateCoordinates(customer.coordinates.x, customer.coordinates.y);
-
-          // for recharge must think about can go to wHouse or cStation
-          // and does have enough battery to go 
-          // if(drone.batteryPercentage <= 5) {
-          //   drone.goToCharge(chargingStations, warehouses);
-          // };
-
-          if(orderStatus) {
-            order.changeStatusToDelivered();
-          }
-
-          if (distanceToCustomer > biggestDistance) {
-            biggestDistance = distanceToCustomer;
-          };
-
-          break;
-        };
-      };
+        })
+      );
     };
 
-    //no available drones in warehouse
-    if (!droneForDelivery) {
-      for (const droneType of inputTypesOfDrones) {
-        const reqBattery =
-          distanceToCustomer * droneType.consumption;
-        const baterry = droneType.capacity;
-        const batteryToDeliver = baterry - reqBattery;
-
-        if (batteryToDeliver >= 0) {
-          warehouse.drones.push(createDrone(droneType));
-          index -= 1;
-          break;
-        };
-      };
-    };
-  };
-
-  return { dronesTypesUsed, biggestDistance };
+    await Promise.all(orderPromises);
+    return resolve({ dronesTypesUsed, biggestDistance });
+  });
 }
