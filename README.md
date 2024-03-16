@@ -2,6 +2,8 @@
 
 This project was part of an assignment when I applied for an internship as an intern web developer at ' Nemetschek ' company. I had to create an application to simulate deliveries of products with drones.As it had to be calculated: the final time for all deliveries, how many drones were used for deliveries, what type of drones were used, the average delivery time, the current status of each order, the current status of each drone. As input data we get a JSON format file.
 
+![Drone Delivery Network Simulation](drone-delivery-screenshot.png)
+
 
 ## Requirements
 
